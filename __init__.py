@@ -4,7 +4,7 @@ Moltbot Connector - NoneBot2 插件
 """
 import asyncio
 from nonebot import get_driver, on_message, logger
-from nonebot.adapters.onebot.v11 import Bot, MessageEvent, GroupMessageEvent, PrivateMessageEvent
+from nonebot.adapters.onebot.v11 import Bot, MessageEvent, GroupMessageEvent, PrivateMessageEvent, Message, MessageSegment
 from nonebot.rule import to_me
 from nonebot.plugin import PluginMetadata
 from nonebot.exception import FinishedException
@@ -70,6 +70,26 @@ async def handle_message(bot: Bot, event: MessageEvent):
     
     # 获取纯文本消息
     message_text = event.get_plaintext().strip()
+    
+    # 提取图片 URL 并附加到消息文本中
+    image_urls = []
+    for seg in event.message:
+        if seg.type == "image":
+            # 获取图片 URL
+            url = seg.data.get("url") or seg.data.get("file")
+            if url:
+                image_urls.append(url)
+                logger.debug(f"提取到图片 URL: {url}")
+    
+    # 将图片 URL 附加到消息文本中
+    if image_urls:
+        url_text = "\n".join([f"[图片: {url}]" for url in image_urls])
+        if message_text:
+            message_text = f"{message_text}\n\n{url_text}"
+        else:
+            message_text = url_text
+    
+    # 如果没有文本也没有图片，则忽略
     if not message_text:
         return
     

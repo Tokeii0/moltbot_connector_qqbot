@@ -359,6 +359,7 @@ class MoltbotClient:
         thinking: str | None = None,
         timeout: float = 60,
         on_delta: Callable[[str], Any] | None = None,
+        image_attachments: list[dict] | None = None,
     ) -> str | None:
         """
         发送聊天消息到 Moltbot 并等待响应
@@ -369,6 +370,7 @@ class MoltbotClient:
             thinking: 思考模式 (off/low/high)
             timeout: 超时时间
             on_delta: 流式响应回调函数，接收每个 delta 文本片段
+            image_attachments: 图片附件列表，每个元素包含 base64 和 mimeType
         
         Returns:
             AI 助手的响应文本
@@ -381,6 +383,18 @@ class MoltbotClient:
         
         if thinking:
             params["thinking"] = thinking
+        
+        # 添加图片附件
+        if image_attachments:
+            attachments = []
+            for img in image_attachments:
+                attachments.append({
+                    "type": "image",
+                    "mimeType": img.get("mimeType", "image/jpeg"),
+                    "content": img.get("base64"),  # base64 编码的图片数据
+                })
+            params["attachments"] = attachments
+            logger.debug(f"添加 {len(attachments)} 个图片附件")
         
         # 用于收集流式响应
         response_text = ""
