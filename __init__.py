@@ -84,6 +84,7 @@ async def handle_message(bot: Bot, event: MessageEvent):
         response = await moltbot_client.chat_send(
             session_key=session_key,
             message=message_text,
+            timeout=plugin_config.moltbot_timeout,
         )
         
         if response:
