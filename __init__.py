@@ -80,31 +80,15 @@ async def handle_message(bot: Bot, event: MessageEvent):
         session_key = f"qq:private:{event.user_id}"
     
     try:
-        # 用于累积流式响应
-        last_sent_text = ""
-        
-        async def on_delta(delta_text: str):
-            """处理流式响应，实时发送给用户"""
-            nonlocal last_sent_text
-            # 只发送新增的内容
-            if delta_text != last_sent_text:
-                try:
-                    await bot.send(event, delta_text)
-                    last_sent_text = delta_text
-                except Exception as e:
-                    logger.error(f"发送流式响应失败: {e}")
-        
-        # 发送消息到 Moltbot 并获取响应
+        # 发送消息到 Moltbot 并获取响应（不使用流式输出）
         response = await moltbot_client.chat_send(
             session_key=session_key,
             message=message_text,
-            on_delta=on_delta,
         )
         
-        # 如果最终响应与最后发送的不同，再发送一次
-        if response and response != last_sent_text:
+        if response:
             await moltbot_handler.finish(response)
-        elif not response and not last_sent_text:
+        else:
             await moltbot_handler.finish("Moltbot 没有返回响应")
     
     except FinishedException:
